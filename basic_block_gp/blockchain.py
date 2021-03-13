@@ -31,13 +31,21 @@ class Blockchain(object):
         """
 
         block = {
-            # TODO
+            'index': len(self.chain) + 1,
+            'timestamp': time(),
+            'transactions': self.current_transactions,
+            'proof': proof,
+            'previous_hash': previous_hash or self.hash(self.chain[-1])
         }
 
         # Reset the current list of transactions
+        self.current_transactions = []
+
         # Append the chain to the block
+        self.chain.append(block)
+
         # Return the new block
-        pass
+        return block
 
     def hash(self, block):
         """
@@ -56,8 +64,14 @@ class Blockchain(object):
         # or we'll have inconsistent hashes
 
         # TODO: Create the block_string
+        string_object = json.dumps(block, sort_keys=True)
+
+        block_string = string_object.encode()
 
         # TODO: Hash this string using sha256
+
+        hash_object = hashlib.sha256(block_string)
+        hash_string = hash_object.hexdigest()
 
         # By itself, the sha256 function returns the hash in a raw string
         # that will likely include escaped characters.
@@ -66,7 +80,7 @@ class Blockchain(object):
         # easier to work with and understand
 
         # TODO: Return the hashed block string in hexadecimal format
-        pass
+        return hash_string
 
     @property
     def last_block(self):
@@ -81,8 +95,15 @@ class Blockchain(object):
         :return: A valid proof for the provided block
         """
         # TODO
-        pass
+        string_object = json.dumps(self.last_block, sort_keys=True)
+
+        proof = 0
+
         # return proof
+
+        while self.valid_proof(string_object, proof) is False:
+            return proof
+
 
     @staticmethod
     def valid_proof(block_string, proof):
@@ -97,7 +118,13 @@ class Blockchain(object):
         :return: True if the resulting hash is a valid proof, False otherwise
         """
         # TODO
-        pass
+        guess = f'{block_string}{proof}'.encode()
+        guess_hash = hashlib.sha256(guess).hexdigest()
+
+        if guess_hash[:3] == '000':
+            print(guess_hash)
+            return True
+        return False
         # return True or False
 
 
@@ -119,6 +146,11 @@ def mine():
 
     response = {
         # TODO: Send a JSON response with the new block
+        'message': 'We mined a new block!',
+        'index': block['index'],
+        'transactions': block['transactions'],
+        'proof': block['proof'],
+        'previous_hash': block['previous_hash']
     }
 
     return jsonify(response), 200
@@ -128,6 +160,8 @@ def mine():
 def full_chain():
     response = {
         # TODO: Return the chain and its current length
+        'chain': blockchain.chain,
+        'length': len(blockchain.chain)
     }
     return jsonify(response), 200
 
